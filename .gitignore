@@ -1,0 +1,12 @@
+/.gradle
+/.idea
+/**/build
+/build
+*.iml
+
+local.properties
+hs_err_pid*
+java_*.hprof
+.DS_Store
+
+!gradle-wrapper.jar

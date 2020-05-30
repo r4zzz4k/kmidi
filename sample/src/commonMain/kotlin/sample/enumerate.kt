@@ -2,12 +2,11 @@ package me.r4zzz4k.kmidi.sample
 
 import me.r4zzz4k.kmidi.core.*
 import me.r4zzz4k.kmidi.utils.*
-import platform.CoreMIDI.MIDIThruConnectionDispose
-import platform.posix.sleep
 
 fun main(args: Array<String>) {
     disposableScope {
-        val midi = KMidiClient("KMidi Sample").bind()
+        val midi = KMidiClient().bind()
+        //val midi = KMidiClient("KMidi Sample").bind()
 
         val src = pickFromList(midi.sources, "Enter source index") { it.displayName } ?: return
         val sink = pickFromList(midi.sinks, "Enter sink index") { it.displayName } ?: return

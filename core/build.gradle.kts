@@ -4,7 +4,13 @@ plugins {
 }
 
 kotlin {
+    linuxX64("linux") {
+        compilations.named("main") {
+            cinterops.register("asound")
+        }
+    }
     macosX64("macos")
+
     sourceSets {
         commonMain {
             dependencies {
@@ -18,9 +24,13 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-        val macosMain by getting {
-        }
-        val macosTest by getting {
+        val linuxMain by getting
+        val macosMain by getting
+
+        all {
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalStdlibApi")
+            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalUnsignedTypes")
         }
     }
 }

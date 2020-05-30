@@ -2,7 +2,7 @@ package me.r4zzz4k.kmidi.core
 
 import me.r4zzz4k.kmidi.utils.Disposable
 
-expect class KMidiClient : Disposable
+expect class KMidiClient(name: String? = null) : Disposable
 expect class KMidiEndpoint : Disposable {
     val displayName: String
 }

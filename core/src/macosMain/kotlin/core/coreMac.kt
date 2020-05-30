@@ -8,7 +8,7 @@ import platform.Foundation.NSData
 import platform.Foundation.dataWithBytes
 
 actual class KMidiClient(internal val ref: MIDIClientRef): Disposable {
-    constructor(name: String?): this(fetchViaPtr { ptr: CPointer<MIDIClientRefVar> ->
+    actual constructor(name: String): this(fetchViaPtr { ptr: CPointer<MIDIClientRefVar> ->
         MIDIClientCreate(name?.toCFStringRef(), null, null, ptr)
     })
 

@@ -1,5 +1,4 @@
 @file:Suppress("FINAL_UPPER_BOUND")
-@file:OptIn(ExperimentalUnsignedTypes::class)
 
 package me.r4zzz4k.kmidi.utils
 

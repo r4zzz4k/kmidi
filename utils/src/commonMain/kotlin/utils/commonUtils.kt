@@ -4,3 +4,6 @@ fun Int.toHexString(): String = "0x" + toString(16).padStart(8, '0')
 fun UInt.toHexString(): String = "0x" + toString(16).padStart(8, '0')
 fun Long.toHexString(): String = "0x" + toString(16).padStart(16, '0')
 fun ULong.toHexString(): String = "0x" + toString(16).padStart(16, '0')
+
+expect fun readLine(): String?
+expect fun sleep(seconds: UInt)

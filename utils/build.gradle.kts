@@ -4,6 +4,7 @@ plugins {
 }
 
 kotlin {
+    linuxX64("linux")
     macosX64("macos")
     sourceSets {
         commonMain {
@@ -17,9 +18,19 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-        val macosMain by getting {
+        val linuxMain by getting
+        val macosMain by getting
+
+        val nativeMain by creating {
+            dependsOn(commonMain.get())
+            linuxMain.dependsOn(this)
+            macosMain.dependsOn(this)
         }
-        val macosTest by getting {
+
+        all {
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalStdlibApi")
+            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalUnsignedTypes")
         }
     }
 }

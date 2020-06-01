@@ -8,7 +8,7 @@ import platform.Foundation.NSData
 import platform.Foundation.dataWithBytes
 
 actual class KMidiClient(internal val ref: MIDIClientRef): Disposable {
-    actual constructor(name: String): this(fetchViaPtr { ptr: CPointer<MIDIClientRefVar> ->
+    actual constructor(name: String?): this(fetchViaPtr { ptr: CPointer<MIDIClientRefVar> ->
         MIDIClientCreate(name?.toCFStringRef(), null, null, ptr)
     })
 
@@ -17,7 +17,10 @@ actual class KMidiClient(internal val ref: MIDIClientRef): Disposable {
     }
 }
 
-actual class KMidiEndpoint(internal val ref: MIDIEndpointRef, private val owned: Boolean = true): Disposable {
+class CoreMidiPort(
+    internal val ref: MIDIEndpointRef,
+    private val owned: Boolean = true
+): KMidiPort, KMidiSourcePort, KMidiSinkPort {
     actual val displayName: String by lazy {
         memScoped {
             fetchViaPtr { ptr: CPointer<CFStringRefVar> ->
@@ -42,23 +45,23 @@ actual class KMidiConnection(internal val ref: MIDIThruConnectionRef, private va
     }
 }
 
-actual val KMidiClient.sources: List<KMidiEndpoint>
+actual val KMidiClient.sources: List<KMidiSourcePort>
     get() = (0UL..MIDIGetNumberOfSources())
         .mapNotNull { MIDIGetSource(it).takeIf { it != 0U } }
-        .map { KMidiEndpoint(it, false) }
+        .map { CoreMidiPort(it, false) }
 
-actual val KMidiClient.sinks: List<KMidiEndpoint>
+actual val KMidiClient.sinks: List<KMidiSinkPort>
     get() = (0UL..MIDIGetNumberOfSources())
         .mapNotNull { MIDIGetDestination(it).takeIf { it != 0U } }
-        .map { KMidiEndpoint(it, false) }
+        .map { CoreMidiPort(it, false) }
 
-actual fun KMidiClient.createSource(name: String): KMidiEndpoint = KMidiEndpoint(
+actual fun KMidiClient.createSource(name: String): KMidiSourcePort = CoreMidiSourcePort(
     fetchViaPtr { ptr: CPointer<MIDIEndpointRefVar> ->
         MIDISourceCreate(ref, name.toCFStringRef(), ptr)
     }
 )
 
-actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiEndpoint = KMidiEndpoint(
+actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiSinkPort = CoreMidiSinkPort(
     fetchViaPtr { ptr: CPointer<MIDIEndpointRefVar> ->
         val stableReadChannel = StableRef.create(readChannel)
         MIDIDestinationCreate(
@@ -76,7 +79,7 @@ actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiEndpoint
     }
 )
 
-actual fun KMidiEndpoint.passThrough(sink: KMidiEndpoint, transpose: Int): KMidiConnection = memScoped {
+actual fun KMidiSourcePort.passThrough(sink: KMidiSinkPort, transpose: Int): KMidiConnection = memScoped {
     val src = this@passThrough
     val params = cValue<MIDIThruConnectionParams> {
         MIDIThruConnectionParamsInitialize(ptr)

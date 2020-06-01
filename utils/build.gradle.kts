@@ -18,14 +18,16 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-        val linuxMain by getting
+        val linuxMain by getting {
+            kotlin.srcDirs("src/nativeMain/kotlin")
+        }
         val macosMain by getting
 
-        val nativeMain by creating {
+        /*val nativeMain by creating {
             dependsOn(commonMain.get())
             linuxMain.dependsOn(this)
             macosMain.dependsOn(this)
-        }
+        }*/
 
         all {
             languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")

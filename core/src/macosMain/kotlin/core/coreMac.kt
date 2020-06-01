@@ -18,6 +18,7 @@ actual class KMidiClient(internal val ref: MIDIClientRef): Disposable {
 }
 
 class CoreMidiPort(
+    val owner: KMidiClient,
     internal val ref: MIDIEndpointRef,
     private val owned: Boolean = true
 ): KMidiPort, KMidiSourcePort, KMidiSinkPort {
@@ -48,12 +49,12 @@ actual class KMidiConnection(internal val ref: MIDIThruConnectionRef, private va
 actual val KMidiClient.sources: List<KMidiSourcePort>
     get() = (0UL..MIDIGetNumberOfSources())
         .mapNotNull { MIDIGetSource(it).takeIf { it != 0U } }
-        .map { CoreMidiPort(it, false) }
+        .map { CoreMidiPort(this, it, false) }
 
 actual val KMidiClient.sinks: List<KMidiSinkPort>
     get() = (0UL..MIDIGetNumberOfSources())
         .mapNotNull { MIDIGetDestination(it).takeIf { it != 0U } }
-        .map { CoreMidiPort(it, false) }
+        .map { CoreMidiPort(this, it, false) }
 
 actual fun KMidiClient.createSource(name: String): KMidiSourcePort = CoreMidiSourcePort(
     fetchViaPtr { ptr: CPointer<MIDIEndpointRefVar> ->
@@ -80,7 +81,8 @@ actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiSinkPort
 )
 
 actual fun KMidiSourcePort.passThrough(sink: KMidiSinkPort, transpose: Int): KMidiConnection = memScoped {
-    val src = this@passThrough
+    this@passThrough as CoreMidiPort
+    sink as CoreMidiPort
     val params = cValue<MIDIThruConnectionParams> {
         MIDIThruConnectionParamsInitialize(ptr)
 

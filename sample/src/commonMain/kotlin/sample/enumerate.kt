@@ -12,11 +12,11 @@ fun main(args: Array<String>) {
         val sink = pickFromList(midi.sinks, "Enter sink index") { it.displayName } ?: return
 
         println("Enter transposition (in octaves):")
-        print("> ")
-        val transposition = readLine()?.toIntOrNull() ?: return
+        print("> [0] ")
+        val transposition = readLine()?.toIntOrNull() ?: 0
 
         src.passThrough(sink, transposition).bind()
-        sleep(10U)
+        sleep(5U)
 
         Unit
     }

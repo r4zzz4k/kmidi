@@ -1,12 +1,19 @@
 package me.r4zzz4k.kmidi.core
 
-import asound.*
 import kotlinx.cinterop.*
-import me.r4zzz4k.kmidi.core.asound.*
+import me.r4zzz4k.kmidi.asound.*
 import me.r4zzz4k.kmidi.utils.*
 
 actual class KMidiClient(internal val seq: SndSeq): Disposable {
-    actual constructor(name: String?): this(SndSeq(name, SndSeq.Open.DUPLEX, false))
+    actual constructor(name: String?): this(name, "default")
+
+    constructor(clientName: String?, sequencerName: String):
+        this(SndSeq(sequencerName, SndSeq.Open.DUPLEX, false).also {
+            if(clientName != null) {
+                it.clientName(clientName)
+            }
+        })
+
     override fun dispose() {
         seq.dispose()
     }
@@ -16,12 +23,13 @@ private fun KMidiClient.ports(caps: Int): List<AsoundMidiPort> = buildList {
     seq.forEachPort { clientInfo, portInfo ->
         val cap = caps.toUInt()
         if (portInfo.capability and cap == cap) {
-            add(AsoundMidiPort(clientInfo.copy(), portInfo.copy()))
+            add(AsoundMidiPort(this@ports, clientInfo.copy(), portInfo.copy()))
         }
     }
 }
 
 class AsoundMidiPort(
+    val owner: KMidiClient,
     val client: SndSeqClientInfo,
     val port: SndSeqPortInfo,
     private val owned: Boolean = true
@@ -37,24 +45,50 @@ class AsoundMidiPort(
     }
 }
 
-actual class KMidiConnection(private val owned: Boolean = true): Disposable {
+actual class KMidiConnection(
+    internal val owner: KMidiClient,
+    internal val ref: SndSeqPortSubscribe,
+    private val owned: Boolean = true
+): Disposable {
+    init {
+        owner.seq.subscribePort(ref)
+    }
+
     override fun dispose() {
+        owner.seq.unsubscribePort(ref)
         if(owned) {
+            ref.dispose()
         }
     }
 }
 
 actual val KMidiClient.sources: List<KMidiSourcePort>
-    get() = ports(SND_SEQ_PORT_CAP_SUBS_READ or SND_SEQ_PORT_CAP_READ)
+    get() = ports(SndSeq.PortCap.SUBS_READ.value or SndSeq.PortCap.READ.value)
 
 actual val KMidiClient.sinks: List<KMidiSinkPort>
-    get() = ports(SND_SEQ_PORT_CAP_SUBS_WRITE or SND_SEQ_PORT_CAP_WRITE)
+    get() = ports(SndSeq.PortCap.SUBS_WRITE.value or SndSeq.PortCap.WRITE.value)
 
 actual fun KMidiClient.createSource(name: String): KMidiSourcePort = TODO()
 
-actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiSinkPort = TODO()
+actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiSinkPort {
+    val port = seq.createSimplePort(
+        name,
+        SndSeq.PortCap.WRITE.value or SndSeq.PortCap.SUBS_WRITE.value,
+        SndSeq.PortType.MIDI_GENERIC.value
+    )
+    TODO()
+}
 
 actual fun KMidiSourcePort.passThrough(sink: KMidiSinkPort, transpose: Int): KMidiConnection {
-    println("TOOD: connect $displayName to ${sink.displayName}")
-    return KMidiConnection()
+    val src = this as AsoundMidiPort
+    sink as AsoundMidiPort
+    val client = src.owner
+    println("TODO: connect $displayName to ${sink.displayName}")
+
+    val subsciption = SndSeqPortSubscribe().apply {
+        sender { setFrom(src.port) }
+        dest { setFrom(sink.port) }
+    }
+
+    return KMidiConnection(client, subsciption)
 }

@@ -4,8 +4,11 @@ plugins {
 }
 
 kotlin {
-    linuxX64("linux")
-    macosX64("macos")
+    linuxX64("linux") {
+        compilations.named("main") {
+            cinterops.register("asound")
+        }
+    }
 
     sourceSets {
         commonMain {
@@ -14,18 +17,7 @@ kotlin {
                 implementation(kotlin("stdlib-common"))
             }
         }
-        commonTest {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
-            }
-        }
-        val linuxMain by getting {
-            dependencies {
-                api(project(":libasound"))
-            }
-        }
-        val macosMain by getting
+        val linuxMain by getting
 
         all {
             languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")

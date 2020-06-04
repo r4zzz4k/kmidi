@@ -1,6 +1,5 @@
 plugins {
     kotlin("multiplatform")
-    id("maven-publish")
 }
 
 kotlin {
@@ -18,16 +17,16 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-        val linuxMain by getting {
-            kotlin.srcDirs("src/nativeMain/kotlin")
-        }
-        val macosMain by getting
-
-        /*val nativeMain by creating {
+        val nativeMain by creating {
             dependsOn(commonMain.get())
-            linuxMain.dependsOn(this)
-            macosMain.dependsOn(this)
-        }*/
+        }
+
+        val linuxMain by getting {
+            dependsOn(nativeMain)
+        }
+        val macosMain by getting {
+            dependsOn(nativeMain)
+        }
 
         all {
             languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")

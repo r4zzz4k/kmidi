@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.3.72" apply false
+    kotlin("multiplatform") version "1.4-M2" apply false
 }
 
 allprojects {
@@ -9,6 +9,7 @@ allprojects {
 
 subprojects {
     repositories {
-        mavenCentral()
+        maven(url = "https://dl.bintray.com/kotlin/kotlin-eap")
+        jcenter()
     }
 }

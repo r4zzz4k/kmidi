@@ -22,7 +22,7 @@ class CoreMidiPort(
     internal val ref: MIDIEndpointRef,
     private val owned: Boolean = true
 ): KMidiPort, KMidiSourcePort, KMidiSinkPort {
-    actual val displayName: String by lazy {
+    override val displayName: String by lazy {
         memScoped {
             fetchViaPtr { ptr: CPointer<CFStringRefVar> ->
                 MIDIObjectGetStringProperty(ref, kMIDIPropertyDisplayName, ptr)
@@ -56,13 +56,15 @@ actual val KMidiClient.sinks: List<KMidiSinkPort>
         .mapNotNull { MIDIGetDestination(it).takeIf { it != 0U } }
         .map { CoreMidiPort(this, it, false) }
 
-actual fun KMidiClient.createSource(name: String): KMidiSourcePort = CoreMidiSourcePort(
+actual fun KMidiClient.createSource(name: String): KMidiSourcePort = CoreMidiPort(
+    this,
     fetchViaPtr { ptr: CPointer<MIDIEndpointRefVar> ->
         MIDISourceCreate(ref, name.toCFStringRef(), ptr)
     }
 )
 
-actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiSinkPort = CoreMidiSinkPort(
+actual fun KMidiClient.createSink(name: String, readChannel: Any): KMidiSinkPort = CoreMidiPort(
+    this,
     fetchViaPtr { ptr: CPointer<MIDIEndpointRefVar> ->
         val stableReadChannel = StableRef.create(readChannel)
         MIDIDestinationCreate(
@@ -88,7 +90,7 @@ actual fun KMidiSourcePort.passThrough(sink: KMidiSinkPort, transpose: Int): KMi
 
         numSources = 1U
         with(sources[0]) {
-            endpointRef = src.ref
+            endpointRef = ref
             uniqueID = 1
         }
 

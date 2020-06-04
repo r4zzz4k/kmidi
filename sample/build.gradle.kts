@@ -23,7 +23,6 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":core"))
-                api(project(":device"))
 
                 implementation(kotlin("stdlib-common"))
             }
